@@ -1,0 +1,57 @@
+console.log('Starting script.');
+
+(function() {
+  let rebootConfirmed = false;
+
+  function reboot() {
+    console.log('Attempting to reboot.');
+    E.reboot();
+    console.log('Should have rebooted.'); // This may not print if the reboot occurs immediately
+  }
+
+  console.log('Setting up LCD power event listener.');
+  Bangle.on('lcdPower', function(on) {
+    console.log('LCD power event triggered. Power state:', on);
+    if (on && rebootConfirmed) {
+      console.log('LCD is on and reboot is confirmed.');
+      Bangle.setLCDMode('on');
+      reboot();
+    } else if (on) {
+      console.log('LCD is on but reboot is not yet confirmed.');
+    } else {
+      console.log('LCD is off.');
+    }
+  });
+
+  console.log('Clearing the screen and displaying confirmation message.');
+  g.clear();
+  g.setFontAlign(0, 0); // center alignment
+  g.setFont("Vector", 15); // Adjusted the font size
+  g.drawString("Tap to confirm", g.getWidth() / 2, g.getHeight() / 2 - 10);
+  g.drawString("reboot", g.getWidth() / 2, g.getHeight() / 2 + 10);
+
+  console.log('Setting up touch event listener.');
+  Bangle.on('touch', function(e) {
+    console.log('Touch event triggered. Event data:', e);
+    if (e && !rebootConfirmed) {
+      console.log('Touch detected and reboot is not yet confirmed.');
+      rebootConfirmed = true;
+
+      console.log('Clearing the screen and displaying rebooting message.');
+      g.clear();
+      g.drawString("Rebooting...", g.getWidth() / 2, g.getHeight() / 2);
+
+      console.log('Waiting for 2 seconds before reboot.');
+      setTimeout(() => {
+        console.log('2 seconds elapsed, initiating reboot.');
+        reboot();
+      }, 2000);
+    } else if (e) {
+      console.log('Touch detected but reboot is already confirmed.');
+    } else {
+      console.log('Touch event triggered but no touch detected.');
+    }
+  });
+})();
+
+console.log('Script setup complete.');
